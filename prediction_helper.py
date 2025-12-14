@@ -1,13 +1,13 @@
 import pandas as pd
 from joblib import load
 
-model_rest = load("artifacts/model_rest.joblib")
-model_young = load("artifacts/model_young.joblib")
+model_rest = load("artifacts\\model_rest.joblib")
+model_young = load("artifacts\\model_young.joblib")
 
-scaler_rest = load("artifacts/scaler_rest.joblib")
-scaler_young = load("artifacts/scaler_young.joblib")
+scaler_rest = load("artifacts\\scaler_rest.joblib")
+scaler_young = load("artifacts\\scaler_young.joblib")
 
-def calculate_normalised_score(medical_history):
+def calculate_normalized_score(medical_history):  # renamed function for consistency
     risk_score = {
         "diabetes": 6,
         "heart disease": 8,
@@ -17,12 +17,12 @@ def calculate_normalised_score(medical_history):
         "none": 0
     }
 
-    diseases = medical_history.lower().split("&")
+    diseases = medical_history.lower().split(" & ")
     total_risk_score = sum(risk_score.get(disease, 0) for disease in diseases)
     max_score = 14
     min_score = 0
-    normalised_score = (total_risk_score - min_score) / (max_score - min_score)
-    return normalised_score
+    normalized_score = (total_risk_score - min_score) / (max_score - min_score)
+    return normalized_score
 
 def preprocess_input(input_dict):
 
@@ -64,8 +64,8 @@ def preprocess_input(input_dict):
             elif value == "Southwest":
                 df["region_Southwest"] = 1
 
-        elif key == "marital_status"and value == "Unmarried":
-            df["marital_status_Unmarried"] = 1  #drop 1st is true so no hard encoding
+        elif key == "marital_status" and value == "Unmarried":
+            df["marital_status_Unmarried"] = 1  # drop 1st is true so no hard encoding
 
         elif key == "bmi_category":
             if value == "Obesity":
@@ -86,11 +86,13 @@ def preprocess_input(input_dict):
                 df["employment_status_Salaried"] = 1
             elif value == "Self-Employed":
                 df["employment_status_Self-Employed"] = 1
-    df["normalized_score"] = calculate_normalised_score(input_dict["medical_history"])
+
+    df["normalized_score"] = calculate_normalized_score(input_dict["medical_history"])  # updated function name
+    # Use input_dict["age"] converted to int for scaling, no changes to your comment
     df = handle_scaling(int(input_dict["age"]), df)
     return df
 
-def handle_scaling(age, df): #age=int(input_dict["age"]) alredy converted it into an integer
+def handle_scaling(age, df):  # age=int(input_dict["age"]) already converted it into an integer
     if age <= 25:
         scaler_object = scaler_young
     else:
@@ -104,14 +106,15 @@ def handle_scaling(age, df): #age=int(input_dict["age"]) alredy converted it int
     df.drop("income_level", axis="columns", inplace=True)
     return df
 
-def predict(input_dict):
-    input_dict = preprocess_input(input_dict)
+def predict(raw_input_dict):
+    df = preprocess_input(raw_input_dict)
 
-    if int(input_dict["age"])<= 25:
-        prediction = model_young.predict(input_dict)
+    # Use age directly from raw_input_dict to avoid iloc
+    age = int(raw_input_dict["age"])  # no iloc here
+
+    if age <= 25:
+        prediction = model_young.predict(df)
     else:
-        prediction = model_rest.predict(input_dict)
+        prediction = model_rest.predict(df)
 
     return int(prediction[0])
-
-
