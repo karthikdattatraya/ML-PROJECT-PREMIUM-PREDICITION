@@ -1,11 +1,11 @@
 import pandas as pd
 from joblib import load
 
-model_rest = load("artifacts\\model_rest.joblib")
-model_young = load("artifacts\\model_young.joblib")
+model_rest = load("artifacts/model_rest.joblib")
+model_young = load("artifacts/model_young.joblib")
 
-scaler_rest = load("artifacts\\scaler_rest.joblib")
-scaler_young = load("artifacts\\scaler_young.joblib")
+scaler_rest = load("artifacts/scaler_rest.joblib")
+scaler_young = load("artifacts/scaler_young.joblib")
 
 def calculate_normalized_score(medical_history):  # renamed function for consistency
     risk_score = {
@@ -87,8 +87,7 @@ def preprocess_input(input_dict):
             elif value == "Self-Employed":
                 df["employment_status_Self-Employed"] = 1
 
-    df["normalized_score"] = calculate_normalized_score(input_dict["medical_history"])  # updated function name
-    # Use input_dict["age"] converted to int for scaling, no changes to your comment
+    df["normalized_score"] = calculate_normalized_score(input_dict["medical_history"])
     df = handle_scaling(int(input_dict["age"]), df)
     return df
 
@@ -106,11 +105,11 @@ def handle_scaling(age, df):  # age=int(input_dict["age"]) already converted it 
     df.drop("income_level", axis="columns", inplace=True)
     return df
 
-def predict(raw_input_dict):
-    df = preprocess_input(raw_input_dict)
+def predict(input_dict):
+    df = preprocess_input(input_dict)
 
     # Use age directly from raw_input_dict to avoid iloc
-    age = int(raw_input_dict["age"])  # no iloc here
+    age = int(input_dict["age"])  # no iloc here
 
     if age <= 25:
         prediction = model_young.predict(df)
